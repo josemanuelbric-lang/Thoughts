@@ -1,0 +1,29 @@
+using Printf
+
+setprecision(BigFloat, 512)
+
+v = [(BigFloat(cosd(a)), BigFloat(sind(a))) for a in [0.0, 180.0, 270.0]]
+a_last = BigFloat(270.0)
+da = BigFloat(90.0)
+
+for n in 1:100
+    global da /= 2
+    global a_last += da
+    push!(v, (cosd(a_last), sind(a_last)))
+    s = sum(v[i][1]*v[mod1(i+1, end)][2] - v[i][2]*v[mod1(i+1, end)][1] for i in 1:length(v))
+    @printf("V: %d | Area: %.50f\n", length(v), abs(s)/2)
+end
+
+println("\n--- Analytical Calculation (Series) ---")
+A = BigFloat(1.0)
+@printf("Iter: 0 | A: %.50f\n", A)
+
+    # Formula: 1 + Sum_{n>=1} 0.5 * (2*sin(pi/2^(n+1)) - sin(pi/2^n))
+for n in 1:200
+    an = BigFloat(pi) / (BigFloat(2)^(n+1))
+    ap = BigFloat(pi) / (BigFloat(2)^n)
+    delta = BigFloat(0.5) * (2 * sin(an) - sin(ap))
+    global A += delta
+    @printf("Iter: %d | A: %.50f\n", n, A)
+    abs(delta) < 1e-100 && break
+end
