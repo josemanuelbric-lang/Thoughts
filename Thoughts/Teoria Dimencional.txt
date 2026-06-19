@@ -1,0 +1,48 @@
+
+El universo esta hecho de dimenciones y ATOMODIMENCIONAL que se componen las dimenciones por el cuadrado o superior de la dimencion anterior o algun x^N o x^-N
+teniendo dos estructura la DIMENCION y el ATOMODIMENCIONAL.
+donde una estrutura ejemplo para el universo seria
+Dimencion 
+[dimenciones Complejas]             [------------dimenciones realales----][------------------dimenciones Enteras-------]
+                                     CeroUnoEspacial -> tiempo -> espacio -> energia -> particulas -> atomos -> objectos -> m1
+Donde 2 atomosDimecionales Como de espacio se juntan y saltan para combertirce en energia
+atomosDimecionales de energia salta para combertir en particuals
+
+y todo estaria ligado y para que se forme otra dimencion se nesesita que los ATOMODIMENCIONAL por decirlo
+de una forma se junte y eleven para salir de su Dimencion a una superior de organizacion.
+o
+
+
+las Dimenciones tiene mucho parecidos a otras estructuras matematicas y 
+otros campos como Teoria de conjunto como en una Dimencion por poner un 
+ejemplo La de particulas no son nesariamente es  del todo acertada tomarla por que puede ser una dimencion con un ordenamiento mas 
+abstracto que contiene las particulas y otras cosas infraparticula y ultraparticula que no 
+conosemos, entonces los atomos podrian ser un parte de ladimencion de las particula, o ser un una 
+subdimencion abiendo otras Dimencion que abarca la totalidad de los atomos, o estar a otra 
+dimencion por encima existiendo una entre las dos.
+
+|||
+|||
+||| (*%12% un ATOMODIMENCIONAL que es el cuadrado del espacio u otras dimeciones) 
+|||-----------(energia: Dimencion)
+|| (*+*%12%: Dos ATOMODIMENCIONAL que se suman con el identificado %12%)
+||-----------(espacio: Dimencion) el espacio tiene que ser obligatoriamente el cuadrado o superior de CeroUnoEspacial
+| 
+------------------------(CeroUnoEspacial: Dimencion)
+
+Conclusiones logicas De estos
+1)que no existe una dimencion con infinitos atomos dimencionales.
+1R)por que serian una totalidad infinita como si ubira infinitos atomosDimecionales de espacio Todo Deveria esta alejado infinitamente o lleno de enegia
+1R)si ubiera energia infinita Todo seria energia y por con secuensia tambien el espacio y dimeciones anteriores tambien
+
+
+2)no existen Dimenciones infinitas por que el universo variaria infinitamente
+3)Teorias como la teoria M devirian estar ligada por otras dimencion que ligue esas 
+3R)por que si las dimenciones estubieran cada una por su cuenta no se daria interacion |D1|D2|D3
+4)los probles de infinitos
+4R)los probles de infinitos se presenta al medir una dimencion con una escala disena de otra dimencion como medir un circulo con polinomios
+
+5bien)Postulado: No existe ninguna Dimensión ($\mathbf{D_n}$) que contenga una cantidad infinita de Atomodimensionales ($\mathbf{A_n}$), ni existen infinitas Dimensiones en la Jerarquía ($\mathbf{n \in \mathbb{Z}}$ es finito).
+R5)Racional (R1, R2): Una dimensión con infinitos $\mathbf{A_n}$ conduciría a una densidad de energía o de espacio infinita (divergencia), resultando en un colapso del sistema por dominio energético o una separación infinita de las unidades. Si la dimensión de la Energía ($\mathbf{D_2}$) fuera infinita, toda la jerarquía subsiguiente colapsaría en un estado de energía pura, eliminando la emergencia de estructuras. Por lo tanto, el $\mathbf{A_n}$ que cuantifica cada $\mathbf{D_n}$ debe ser finito y contable.
+R5)Implicación: Esto establece una restricción de compacidad en el espacio de fase de cada Dimensión.
+
