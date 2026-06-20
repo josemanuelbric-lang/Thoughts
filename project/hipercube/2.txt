@@ -1,0 +1,167 @@
+import math
+import itertools
+import time
+import matplotlib.pyplot as plt
+import networkx as nx
+
+# ------------------------------------------------------------
+# 1. Construir aristas del hipercubo de dimensión D
+# ------------------------------------------------------------
+def hypercube_edges(D):
+    V = 1 << D
+    edges = []
+    for u in range(V):
+        for bit in range(D):
+            v = u ^ (1 << bit)
+            if u < v:
+                edges.append((u, v))
+    return edges
+
+# ------------------------------------------------------------
+# 2. Construir subgrafo inducido + relleno para alcanzar A_target
+# ------------------------------------------------------------
+def build_hypercube_subgraph_filled(V, D, A_target):
+    # Subgrafo inducido por los primeros V vértices del hipercubo Q_D
+    all_edges = hypercube_edges(D)
+    sub_edges = [(u, v) for u, v in all_edges if u < V and v < V]
+    G = nx.Graph()
+    G.add_nodes_from(range(V))
+    G.add_edges_from(sub_edges)
+    
+    # Si ya tenemos A_target o más, devolver
+    if G.number_of_edges() >= A_target:
+        return G
+    
+    # Añadir aristas faltantes de manera determinista
+    # Priorizar vértices con menor grado
+    while G.number_of_edges() < A_target:
+        # Calcular grados actuales
+        degrees = dict(G.degree())
+        # Buscar pares no conectados con menor suma de grados (para mantener regularidad)
+        best_pair = None
+        best_sum = float('inf')
+        for u in range(V):
+            for v in range(u+1, V):
+                if not G.has_edge(u, v):
+                    s = degrees[u] + degrees[v]
+                    if s < best_sum:
+                        best_sum = s
+                        best_pair = (u, v)
+        if best_pair is None:
+            break  # no hay más aristas posibles (grafo completo)
+        G.add_edge(best_pair[0], best_pair[1])
+    
+    return G
+
+# ------------------------------------------------------------
+# 3. Comprobar si un grafo es un bosque después de eliminar una máscara
+# ------------------------------------------------------------
+def is_forest(num_vertices, edges, removed_mask):
+    adj = [[] for _ in range(num_vertices)]
+    for u, v in edges:
+        if not (removed_mask & (1 << u)) and not (removed_mask & (1 << v)):
+            adj[u].append(v)
+            adj[v].append(u)
+    
+    visited = [False] * num_vertices
+    total_vertices = 0
+    total_edges = 0
+    
+    for u in range(num_vertices):
+        if not (removed_mask & (1 << u)):
+            total_vertices += 1
+    
+    comp_count = 0
+    for start in range(num_vertices):
+        if not (removed_mask & (1 << start)) and not visited[start]:
+            comp_count += 1
+            stack = [start]
+            visited[start] = True
+            while stack:
+                u = stack.pop()
+                for w in adj[u]:
+                    if u < w:
+                        total_edges += 1
+                    if not visited[w]:
+                        visited[w] = True
+                        stack.append(w)
+    
+    return total_edges == total_vertices - comp_count
+
+# ------------------------------------------------------------
+# 4. Fuerza bruta: devuelve la máscara del FVS mínimo
+# ------------------------------------------------------------
+def fvs_bruteforce(num_vertices, edges):
+    for k in range(num_vertices + 1):
+        for subset in itertools.combinations(range(num_vertices), k):
+            removed = 0
+            for v in subset:
+                removed |= (1 << v)
+            if is_forest(num_vertices, edges, removed):
+                return removed
+    return 0
+
+# ------------------------------------------------------------
+# 5. Función para dibujar
+# ------------------------------------------------------------
+def draw_graph(G, removed_mask, fvs_size, ax, title):
+    colors = ['red' if (removed_mask & (1 << i)) else 'lightblue' for i in range(G.number_of_nodes())]
+    pos = nx.spring_layout(G, seed=42)
+    nx.draw(G, pos, ax=ax, node_color=colors, with_labels=True,
+            node_size=500, font_size=8, font_weight='bold')
+    ax.set_title(title)
+    ax.axis('off')
+
+# ------------------------------------------------------------
+# 6. Configuración
+# ------------------------------------------------------------
+MAX_V = 16
+
+print("Construyendo grafos de dimensión real (subgrafo inducido + relleno)")
+print("="*70)
+
+fig, axes = plt.subplots(4, 4, figsize=(16, 16))
+axes = axes.flatten()
+
+resultados = []
+for idx, V in enumerate(range(1, MAX_V + 1)):
+    d = math.log2(V) if V > 0 else 0.0
+    A_target = round((V * d) / 2.0)
+    D = math.ceil(d) if V > 1 else 0
+    
+    G = build_hypercube_subgraph_filled(V, D, A_target)
+    edges = list(G.edges())
+    
+    start = time.time()
+    removed_mask = fvs_bruteforce(V, edges)
+    elapsed = time.time() - start
+    
+    fvs_size = bin(removed_mask).count("1")
+    removed_vertices = [i for i in range(V) if (removed_mask >> i) & 1]
+    
+    print(f"V={V:2d} | d={d:.4f} | A_target={A_target:2d} | A_real={G.number_of_edges():2d} | FVS={fvs_size:2d} | Eliminados: {removed_vertices} | tiempo={elapsed:.4f}s")
+    
+    resultados.append((V, d, A_target, G.number_of_edges(), fvs_size, removed_vertices, elapsed))
+    
+    draw_graph(G, removed_mask, fvs_size, axes[idx], f'V={V}, FVS={fvs_size}, A={G.number_of_edges()}')
+
+# ------------------------------------------------------------
+# 7. Guardar figura y tabla
+# ------------------------------------------------------------
+plt.tight_layout()
+plt.savefig('fvs_real_dimension_filled.png', dpi=150)
+plt.show()
+
+print("\n" + "="*80)
+print("Tabla final: V, d=log2(V), A_target, A_real, FVS")
+print("="*80)
+print(f"{'V':>3} {'d=log2(V)':>12} {'A_target':>8} {'A_real':>6} {'FVS':>5}")
+print("-"*80)
+
+with open('fvs_real_dimension_filled.txt', 'w') as f:
+    f.write("V d A_target A_real FVS vertices_eliminados\n")
+    for (V, d, A_t, A_r, fvs, rem, _) in resultados:
+        print(f"{V:3d} {d:12.4f} {A_t:8d} {A_r:6d} {fvs:5d}")
+        f.write(f"{V} {d:.4f} {A_t} {A_r} {fvs} {rem}\n")
+
+print("\nDatos guardados en 'fvs_real_dimension_filled.txt'")

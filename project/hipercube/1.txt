@@ -1,0 +1,158 @@
+import math
+import itertools
+import time
+import matplotlib.pyplot as plt
+import networkx as nx
+
+# ------------------------------------------------------------
+# 1. Construir aristas del hipercubo de dimensión D
+# ------------------------------------------------------------
+def hypercube_edges(D):
+    V = 1 << D
+    edges = []
+    for u in range(V):
+        for bit in range(D):
+            v = u ^ (1 << bit)
+            if u < v:
+                edges.append((u, v))
+    return edges
+
+# ------------------------------------------------------------
+# 2. Comprobar si un grafo es un bosque después de eliminar una máscara
+# ------------------------------------------------------------
+def is_forest(num_vertices, edges, removed_mask):
+    adj = [[] for _ in range(num_vertices)]
+    for u, v in edges:
+        if not (removed_mask & (1 << u)) and not (removed_mask & (1 << v)):
+            adj[u].append(v)
+            adj[v].append(u)
+    
+    visited = [False] * num_vertices
+    total_vertices = 0
+    total_edges = 0
+    
+    for u in range(num_vertices):
+        if not (removed_mask & (1 << u)):
+            total_vertices += 1
+    
+    comp_count = 0
+    for start in range(num_vertices):
+        if not (removed_mask & (1 << start)) and not visited[start]:
+            comp_count += 1
+            stack = [start]
+            visited[start] = True
+            while stack:
+                u = stack.pop()
+                for w in adj[u]:
+                    if u < w:
+                        total_edges += 1
+                    if not visited[w]:
+                        visited[w] = True
+                        stack.append(w)
+    
+    return total_edges == total_vertices - comp_count
+
+# ------------------------------------------------------------
+# 3. Fuerza bruta: devuelve la máscara del FVS mínimo
+# ------------------------------------------------------------
+def fvs_bruteforce(num_vertices, edges):
+    for k in range(num_vertices + 1):
+        for subset in itertools.combinations(range(num_vertices), k):
+            removed = 0
+            for v in subset:
+                removed |= (1 << v)
+            if is_forest(num_vertices, edges, removed):
+                return removed
+    return 0
+
+# ------------------------------------------------------------
+# 4. Encontrar un ciclo en el grafo original (si existe)
+# ------------------------------------------------------------
+def find_cycle(num_vertices, edges):
+    G = nx.Graph()
+    G.add_nodes_from(range(num_vertices))
+    G.add_edges_from(edges)
+    try:
+        cycle = nx.find_cycle(G)
+        return cycle
+    except nx.NetworkXNoCycle:
+        return None
+
+# ------------------------------------------------------------
+# 5. Función para dibujar (opcional)
+# ------------------------------------------------------------
+def draw_graph(V, edges, removed_mask, fvs_size, ax):
+    G = nx.Graph()
+    G.add_nodes_from(range(V))
+    G.add_edges_from(edges)
+    colors = ['red' if (removed_mask & (1 << i)) else 'lightblue' for i in range(V)]
+    pos = nx.spring_layout(G, seed=42)
+    nx.draw(G, pos, ax=ax, node_color=colors, with_labels=True,
+            node_size=500, font_size=8, font_weight='bold')
+    ax.set_title(f'V = {V}, FVS = {fvs_size}')
+    ax.axis('off')
+
+# ------------------------------------------------------------
+# 6. Configuración
+# ------------------------------------------------------------
+D = 4
+MAX_V = 1 << D
+all_edges = hypercube_edges(D)
+
+print(f"Calculando FVS exacto para subgrafos inducidos por los primeros V vértices de Q_{D}")
+print("="*70)
+
+# Preparar figura (opcional, si quieres visualizar)
+fig, axes = plt.subplots(4, 4, figsize=(16, 16))
+axes = axes.flatten()
+
+resultados = []
+for idx, V in enumerate(range(1, MAX_V + 1)):
+    # Subgrafo inducido por los primeros V vértices
+    sub_edges = [(u, v) for u, v in all_edges if u < V and v < V]
+    num_aristas_reales = len(sub_edges)
+    
+    start = time.time()
+    removed_mask = fvs_bruteforce(V, sub_edges)
+    elapsed = time.time() - start
+    
+    fvs_size = bin(removed_mask).count("1")
+    removed_vertices = [i for i in range(V) if (removed_mask >> i) & 1]
+    cycle = find_cycle(V, sub_edges)
+    
+    # Cálculo de dimensiones y aristas teóricas
+    d = math.log2(V) if V > 0 else 0.0
+    aristas_teoricas = d * (2 ** (d - 1))   # n * 2^(n-1)
+    grado_medio_real = (2 * num_aristas_reales) / V if V > 0 else 0.0
+    
+    resultados.append((V, d, num_aristas_reales, aristas_teoricas, grado_medio_real, fvs_size, removed_vertices, elapsed))
+    
+    print(f"V={V:2d} | FVS={fvs_size:2d} | Eliminados: {removed_vertices} | Ciclo original: {cycle if cycle else 'Ninguno'}")
+    
+    # Dibujar (opcional)
+    draw_graph(V, sub_edges, removed_mask, fvs_size, axes[idx])
+
+# ------------------------------------------------------------
+# 7. Guardar figura (opcional)
+# ------------------------------------------------------------
+plt.tight_layout()
+plt.savefig('fvs_visual_Q4_V1_16.png', dpi=150)
+plt.show()
+
+# ------------------------------------------------------------
+# 8. Tabla final ampliada
+# ------------------------------------------------------------
+print("\n" + "="*90)
+print("Tabla completa: V, d=log2(V), aristas reales, teóricas, grado medio real, FVS")
+print("="*90)
+print(f"{'V':>3} {'d=log2(V)':>12} {'Aristas R':>10} {'Aristas T (redond)':>16} {'Grado medio R':>12} {'FVS':>5}")
+print("-"*90)
+
+with open('fvs_detallado.txt', 'w') as f:
+    f.write("V d aristas_reales aristas_teoricas(redondeo) grado_medio_real FVS vertices_eliminados\n")
+    for (V, d, arR, arT, grado, fvs, rem, _) in resultados:
+        arT_round = round(arT)   # redondeo al entero más cercano
+        print(f"{V:3d} {d:12.4f} {arR:10d} {arT_round:16d} {grado:12.4f} {fvs:5d}")
+        f.write(f"{V} {d:.4f} {arR} {arT_round} {grado:.4f} {fvs} {rem}\n")
+
+print("\nDatos guardados en 'fvs_detallado.txt'")
